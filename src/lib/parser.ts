@@ -31,9 +31,6 @@ export function parseAnswerKey(text: string): Record<number, number> {
   return map;
 }
 
-/**
- * Extracts questions and vertical options from a Word (.docx) ArrayBuffer
- */
 export async function parseDocxFile(
   arrayBuffer: ArrayBuffer,
   answerKeyText: string
@@ -41,45 +38,59 @@ export async function parseDocxFile(
   const result = await mammoth.extractRawText({ arrayBuffer });
   const rawText = result.value || '';
 
-  // Clean hidden non-breaking spaces and normalize line breaks
+  if (!rawText.trim()) {
+    throw new Error('Word document appears to be empty or contains unreadable text.');
+  }
+
   const lines = rawText
     .replace(/\u00A0/g, ' ')
-    .split(/\r?\n/)
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
     .map((l) => l.trim())
     .filter((l) => l.length > 0);
 
   const answerMap = parseAnswerKey(answerKeyText);
   const questions: Question[] = [];
-
   let currentQ: Question | null = null;
 
-  // Matches: "1.", "1)", "Q1.", "Q.1", "Question 1:"
-  const qRegex = /^(?:Q(?:uestion)?\.?\s*)?(\d+)[\.\)]\s*(.*)/i;
+  // Question pattern: "1.", "2.", "Q1.", "Question 1:" (number not enclosed in brackets)
+  const qRegex = /^(?:Q(?:uestion)?\.?\s*)?(\d+)[\.\:\-\)]\s*(.*)/i;
 
-  // Matches: "(1)", "(A)", "1)", "A)", "1.", "A."
-  const optRegex = /^[\(\[]?([1-4A-Da-d])[\.\)\]]\s*(.*)/;
+  // Option pattern: "(1)", "(2)", "[1]", "(A)", "(a)" (enclosed in brackets)
+  const bracketOptRegex = /^[\(\[]\s*([1-4A-Da-d])\s*[\)\]]\s*(.*)/;
+
+  // Fallback option pattern: "A)", "B)", "a.", "b."
+  const letterOptRegex = /^([A-Da-d])[\.\)\-]\s*(.*)/;
 
   for (const line of lines) {
-    const optMatch = line.match(optRegex);
+    const bracketMatch = line.match(bracketOptRegex);
+    const letterMatch = line.match(letterOptRegex);
     const qMatch = line.match(qRegex);
 
-    // Prioritize option matching if already inside a question block
-    if (optMatch && currentQ) {
-      const optText = optMatch[2]?.trim() || '';
-      currentQ.options.push(optText);
-    } else if (qMatch) {
+    // If it's a bracketed option like (1), (2), (3), (4)
+    if (bracketMatch && currentQ && currentQ.options.length < 4) {
+      currentQ.options.push(bracketMatch[2].trim());
+    } 
+    // If it's a lettered option like A), B), C), D)
+    else if (letterMatch && currentQ && currentQ.options.length < 4) {
+      currentQ.options.push(letterMatch[2].trim());
+    } 
+    // If it starts with a question number like 1. or 2.
+    else if (qMatch) {
       if (currentQ && currentQ.options.length > 0) {
         questions.push(currentQ);
       }
       const qNum = parseInt(qMatch[1], 10);
       currentQ = {
         id: qNum,
-        question: qMatch[2]?.trim() || '',
+        question: (qMatch[2] || '').trim(),
         options: [],
         correctOption: answerMap[qNum] || undefined,
       };
-    } else if (currentQ) {
-      // Append multi-line question text or formula lines
+    } 
+    // Multiline continuation
+    else if (currentQ) {
       if (currentQ.options.length === 0) {
         currentQ.question += (currentQ.question ? ' ' : '') + line;
       } else {
