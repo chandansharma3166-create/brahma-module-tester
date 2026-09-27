@@ -20,6 +20,7 @@ export interface TestResult {
   id: string;
   testTitle: string;
   date: string;
+  timestamp: number;
   score: number;
   maxScore: number;
   accuracy: number;
@@ -28,4 +29,14 @@ export interface TestResult {
   incorrect: number;
   unattempted: number;
   timeTakenSeconds: number;
+  // Stored for reattempting and deep analytics
+  questionsSnapshot?: Question[];
+  settingsSnapshot?: TestSettings;
+}
+
+export interface BookmarkedQuestion {
+  id: string; // unique bookmark id
+  testTitle: string;
+  question: Question;
+  bookmarkedDate: string;
 }

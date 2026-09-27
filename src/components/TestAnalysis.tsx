@@ -1,18 +1,75 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Award, CheckCircle, XCircle, MinusCircle, RotateCcw, Eye, ChevronDown, ChevronUp } from 'lucide-react';
-import { Question, TestResult } from '../lib/types';
+import React, { useState, useEffect } from 'react';
+import { 
+  Award, CheckCircle, XCircle, MinusCircle, 
+  RotateCcw, Eye, ChevronDown, ChevronUp, 
+  Bookmark, BookmarkCheck, Play 
+} from 'lucide-react';
+import { Question, TestResult, BookmarkedQuestion } from '../lib/types';
 
 interface TestAnalysisProps {
   result: TestResult;
   questions: Question[];
   userAnswers: Record<number, number>;
   onRetake: () => void;
+  onReattempt: () => void;
 }
 
-export default function TestAnalysis({ result, questions, userAnswers, onRetake }: TestAnalysisProps) {
+export default function TestAnalysis({ 
+  result, 
+  questions, 
+  userAnswers, 
+  onRetake, 
+  onReattempt 
+}: TestAnalysisProps) {
   const [showReview, setShowReview] = useState(true);
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<number>>(new Set());
+
+  // Load existing bookmarks for this session
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('brahma_bookmarked_questions');
+      if (stored) {
+        const bookmarks: BookmarkedQuestion[] = JSON.parse(stored);
+        const ids = new Set(bookmarks.map((b) => b.question.id));
+        setBookmarkedIds(ids);
+      }
+    } catch (e) {
+      console.error('Failed to load bookmarks', e);
+    }
+  }, []);
+
+  const toggleBookmark = (q: Question) => {
+    try {
+      const stored = localStorage.getItem('brahma_bookmarked_questions');
+      let bookmarks: BookmarkedQuestion[] = stored ? JSON.parse(stored) : [];
+
+      const alreadyBookmarked = bookmarks.some((b) => b.question.id === q.id && b.testTitle === result.testTitle);
+
+      if (alreadyBookmarked) {
+        bookmarks = bookmarks.filter((b) => !(b.question.id === q.id && b.testTitle === result.testTitle));
+        setBookmarkedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(q.id);
+          return next;
+        });
+      } else {
+        const newBookmark: BookmarkedQuestion = {
+          id: `${result.testTitle}-${q.id}-${Date.now()}`,
+          testTitle: result.testTitle,
+          question: q,
+          bookmarkedDate: new Date().toLocaleDateString('en-GB'),
+        };
+        bookmarks.unshift(newBookmark);
+        setBookmarkedIds((prev) => new Set(prev).add(q.id));
+      }
+
+      localStorage.setItem('brahma_bookmarked_questions', JSON.stringify(bookmarks));
+    } catch (e) {
+      console.error('Failed to update bookmarks', e);
+    }
+  };
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -37,17 +94,24 @@ export default function TestAnalysis({ result, questions, userAnswers, onRetake 
           </div>
         </div>
 
-        <button
-          onClick={onRetake}
-          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition"
-        >
-          <RotateCcw className="w-4 h-4" /> Take Another Test
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onReattempt}
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition"
+          >
+            <Play className="w-4 h-4 fill-current" /> Reattempt Test
+          </button>
+          <button
+            onClick={onRetake}
+            className="flex items-center gap-1.5 px-4 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl text-sm font-semibold transition"
+          >
+            <RotateCcw className="w-4 h-4" /> New Test
+          </button>
+        </div>
       </div>
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {/* Total Score */}
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm text-center">
           <p className="text-xs font-semibold uppercase text-slate-500 mb-1">Total Score</p>
           <p className="text-3xl font-extrabold text-blue-600">
@@ -55,13 +119,11 @@ export default function TestAnalysis({ result, questions, userAnswers, onRetake 
           </p>
         </div>
 
-        {/* Accuracy */}
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm text-center">
           <p className="text-xs font-semibold uppercase text-slate-500 mb-1">Accuracy</p>
           <p className="text-3xl font-extrabold text-indigo-600">{result.accuracy}%</p>
         </div>
 
-        {/* Correct */}
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm text-center">
           <div className="flex items-center justify-center gap-1.5 text-emerald-600 mb-1">
             <CheckCircle className="w-4 h-4" />
@@ -70,7 +132,6 @@ export default function TestAnalysis({ result, questions, userAnswers, onRetake 
           <p className="text-3xl font-extrabold text-emerald-600">{result.correct}</p>
         </div>
 
-        {/* Incorrect & Skipped */}
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm text-center">
           <div className="flex items-center justify-center gap-1.5 text-rose-500 mb-1">
             <XCircle className="w-4 h-4" />
@@ -83,7 +144,7 @@ export default function TestAnalysis({ result, questions, userAnswers, onRetake 
         </div>
       </div>
 
-      {/* Question Review Section */}
+      {/* Question Review Section with Bookmarking */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
         <button
           onClick={() => setShowReview((prev) => !prev)}
@@ -91,7 +152,7 @@ export default function TestAnalysis({ result, questions, userAnswers, onRetake 
         >
           <div className="flex items-center gap-2">
             <Eye className="w-5 h-5 text-slate-600" />
-            <h2 className="text-lg font-bold text-slate-800">Detailed Question Review</h2>
+            <h2 className="text-lg font-bold text-slate-800">Detailed Question Review & Bookmarks</h2>
           </div>
           {showReview ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
         </button>
@@ -102,24 +163,48 @@ export default function TestAnalysis({ result, questions, userAnswers, onRetake 
               const selected = userAnswers[q.id];
               const isCorrect = q.correctOption !== undefined && selected === q.correctOption;
               const isUnattempted = selected === undefined;
+              const isBookmarked = bookmarkedIds.has(q.id);
 
               return (
                 <div key={q.id} className="pt-6 first:pt-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-slate-700">Question {idx + 1}</span>
-                    {isCorrect ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
-                        <CheckCircle className="w-3.5 h-3.5" /> Correct (+4)
-                      </span>
-                    ) : isUnattempted ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
-                        <MinusCircle className="w-3.5 h-3.5" /> Unattempted (0)
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full">
-                        <XCircle className="w-3.5 h-3.5" /> Incorrect (-1)
-                      </span>
-                    )}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-slate-700">Question {idx + 1}</span>
+                      {isCorrect ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+                          <CheckCircle className="w-3.5 h-3.5" /> Correct (+4)
+                        </span>
+                      ) : isUnattempted ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                          <MinusCircle className="w-3.5 h-3.5" /> Unattempted (0)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full">
+                          <XCircle className="w-3.5 h-3.5" /> Incorrect (-1)
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Bookmark Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={() => toggleBookmark(q)}
+                      className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg border transition font-medium ${
+                        isBookmarked
+                          ? 'bg-amber-50 text-amber-700 border-amber-300'
+                          : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      {isBookmarked ? (
+                        <>
+                          <BookmarkCheck className="w-4 h-4 text-amber-600" /> Bookmarked
+                        </>
+                      ) : (
+                        <>
+                          <Bookmark className="w-4 h-4 text-slate-400" /> Bookmark for Revision
+                        </>
+                      )}
+                    </button>
                   </div>
 
                   <p className="text-sm font-medium text-slate-900 mb-3 whitespace-pre-line">{q.question}</p>
