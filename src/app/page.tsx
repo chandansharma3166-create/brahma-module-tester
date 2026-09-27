@@ -6,7 +6,7 @@ import ExamEngine from '../components/ExamEngine';
 import TestAnalysis from '../components/TestAnalysis';
 import AnalyticsView from '../components/AnalyticsView';
 import { Question, TestSettings, TestResult, BookmarkedQuestion } from '../lib/types';
-import { BarChart3, FileText, Trash2, History } from 'lucide-react';
+import { BarChart3, FileText, Trash2, History, Sprout } from 'lucide-react';
 
 type AppScreen = 'setup' | 'exam' | 'analysis' | 'analytics';
 
@@ -31,7 +31,7 @@ export default function Home() {
         setBookmarkCount(parsed.length);
       }
     } catch (e) {
-      console.error('Failed to load local data', e);
+      console.error('Failed to load local storage data', e);
     }
   };
 
@@ -99,7 +99,7 @@ export default function Home() {
       try {
         localStorage.setItem('brahma_test_history', JSON.stringify(updated));
       } catch (e) {
-        console.error('Failed to remove item', e);
+        console.error('Failed to delete item', e);
       }
     }
   };
@@ -112,22 +112,23 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#FAF6F0] text-[#332720] flex flex-col font-sans">
+      {/* Top Navbar */}
       {screen !== 'exam' && (
-        <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <header className="bg-[#FFFFFF] border-b border-[#E3D6C8] sticky top-0 z-30 shadow-2xs">
           <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
             <div
               onClick={() => setScreen('setup')}
-              className="flex items-center gap-2 cursor-pointer select-none"
+              className="flex items-center gap-2.5 cursor-pointer select-none"
             >
-              <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-lg shadow-sm">
-                B
+              <div className="w-9 h-9 rounded-xl bg-[#2D5A27] text-[#FAF6F0] flex items-center justify-center font-bold text-base shadow-sm">
+                <Sprout className="w-5 h-5 text-[#E6F3E6]" />
               </div>
               <div>
-                <h1 className="text-base font-bold text-slate-800 leading-tight">
+                <h1 className="text-base font-bold text-[#3B2B20] leading-tight">
                   Brahma Module Tester
                 </h1>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#1B6B76]">
                   NEET CBT Portal
                 </span>
               </div>
@@ -139,8 +140,8 @@ export default function Home() {
                 onClick={() => setScreen('setup')}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs md:text-sm font-semibold transition ${
                   screen === 'setup'
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    ? 'bg-[#EBF5E9] text-[#2D5A27] border border-[#C5E3BE]'
+                    : 'text-[#5C4535] hover:text-[#2D5A27] hover:bg-[#FAF6F0]'
                 }`}
               >
                 <FileText className="w-4 h-4" />
@@ -152,14 +153,14 @@ export default function Home() {
                 onClick={() => setScreen('analytics')}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs md:text-sm font-semibold transition ${
                   screen === 'analytics'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100'
+                    ? 'bg-[#1B6B76] text-[#FAF6F0] shadow-sm'
+                    : 'bg-[#E2F4F6] border border-[#BBE3E8] text-[#1B6B76] hover:bg-[#D0EEF1]'
                 }`}
               >
                 <BarChart3 className="w-4 h-4" />
                 <span>Analytics & Notebook</span>
                 {(history.length > 0 || bookmarkCount > 0) && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-indigo-700">
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF6F0] text-[#1B6B76]">
                     {history.length + bookmarkCount}
                   </span>
                 )}
@@ -169,29 +170,30 @@ export default function Home() {
         </header>
       )}
 
+      {/* Main Content Areas */}
       <main className="flex-1">
         {screen === 'setup' && (
           <div className="py-8 px-4">
             <TestSetup onStartTest={handleStartTest} />
 
-            {/* Quick Past Tests with Individual Delete */}
+            {/* Quick Practice History Card */}
             {history.length > 0 && (
-              <div className="max-w-3xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-md border border-slate-200">
-                <div className="flex items-center justify-between border-b pb-3 mb-4">
+              <div className="max-w-3xl mx-auto mt-10 p-6 bg-[#FFFFFF] rounded-2xl shadow-sm border border-[#E3D6C8]">
+                <div className="flex items-center justify-between border-b border-[#EFE7DE] pb-3.5 mb-4">
                   <div className="flex items-center gap-2">
-                    <History className="w-5 h-5 text-blue-600" />
-                    <h2 className="text-lg font-bold text-slate-800">Recent Test Activity</h2>
+                    <History className="w-5 h-5 text-[#6B4E3D]" />
+                    <h2 className="text-base font-bold text-[#3B2B20]">Recent Practice Log</h2>
                   </div>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setScreen('analytics')}
-                      className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
+                      className="text-xs text-[#1B6B76] hover:underline font-semibold"
                     >
                       Deep Analytics →
                     </button>
                     <button
                       onClick={handleClearHistory}
-                      className="flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 font-semibold"
+                      className="flex items-center gap-1 text-xs text-[#9E3E3E] hover:text-[#7A2A2A] font-semibold"
                     >
                       <Trash2 className="w-3.5 h-3.5" /> Clear All
                     </button>
@@ -202,21 +204,21 @@ export default function Home() {
                   {history.slice(0, 3).map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200"
+                      className="flex items-center justify-between p-4 bg-[#FAF6F0] rounded-xl border border-[#EADBCE] hover:border-[#D0C0B0] transition"
                     >
                       <div>
-                        <h4 className="font-semibold text-slate-800 text-sm">{item.testTitle}</h4>
-                        <p className="text-xs text-slate-500">
+                        <h4 className="font-semibold text-[#3B2B20] text-sm">{item.testTitle}</h4>
+                        <p className="text-xs text-[#7A6657] mt-0.5">
                           {item.date} • {item.totalQuestions} Questions • Accuracy: {item.accuracy}%
                         </p>
                       </div>
 
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <span className="text-lg font-bold text-blue-600">
-                            {item.score} <span className="text-xs text-slate-400">/ {item.maxScore}</span>
+                          <span className="text-lg font-bold text-[#1B6B76]">
+                            {item.score} <span className="text-xs text-[#8C7A6D] font-normal">/ {item.maxScore}</span>
                           </span>
-                          <p className="text-[11px] text-emerald-600 font-medium">
+                          <p className="text-[11px] text-[#2D5A27] font-medium">
                             +{item.correct}, -{item.incorrect}
                           </p>
                         </div>
@@ -224,8 +226,8 @@ export default function Home() {
                         <button
                           type="button"
                           onClick={() => handleDeleteTest(item.id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 rounded-lg transition"
-                          title="Delete this test"
+                          className="p-1.5 text-[#8C7A6D] hover:text-[#9E3E3E] hover:bg-[#FBEFEF] border border-[#EADBCE] rounded-lg transition"
+                          title="Delete test"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
