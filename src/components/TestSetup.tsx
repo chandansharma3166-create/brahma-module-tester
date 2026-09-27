@@ -73,7 +73,7 @@ export default function TestSetup({ onStartTest }: TestSetupProps) {
       <div className="border-b border-[#EFE7DE] pb-4 mb-6">
         <h1 className="text-2xl font-bold text-[#3B2B20]">Test Configuration</h1>
         <p className="text-sm text-[#735F52] mt-1">
-          Upload your Word question module, set marking rules, and launch your practice test.
+          Upload your Word module, set your marking scheme, and start practicing.
         </p>
       </div>
 
@@ -85,7 +85,6 @@ export default function TestSetup({ onStartTest }: TestSetupProps) {
       )}
 
       <form onSubmit={handleStart} className="space-y-6">
-        {/* Test Name */}
         <div>
           <label className="block text-sm font-bold text-[#4A3728] mb-1.5">
             Test Title / Name
@@ -100,7 +99,6 @@ export default function TestSetup({ onStartTest }: TestSetupProps) {
           />
         </div>
 
-        {/* File Upload Box */}
         <div>
           <label className="block text-sm font-bold text-[#4A3728] mb-1.5">
             Question Document (.docx)
@@ -121,7 +119,6 @@ export default function TestSetup({ onStartTest }: TestSetupProps) {
           </div>
         </div>
 
-        {/* Answer Key */}
         <div>
           <label className="block text-sm font-bold text-[#4A3728] mb-1.5">
             Answer Key (Optional text block)
@@ -134,11 +131,10 @@ export default function TestSetup({ onStartTest }: TestSetupProps) {
             className="w-full px-4 py-2.5 border border-[#D5C5B5] rounded-xl text-[#332720] font-mono font-medium placeholder-[#A8988B] bg-[#FAF6F0] focus:ring-2 focus:ring-[#1B6B76] focus:border-[#1B6B76] focus:outline-none shadow-xs text-sm"
           />
           <p className="text-xs text-[#8C7A6D] mt-1 font-medium">
-            Format: question number followed by option, e.g. <code className="bg-[#F0E6DC] text-[#4A3728] px-1 py-0.5 rounded">1(2) 2(4)</code>.
+            Format: question number followed by option in brackets, e.g. <code className="bg-[#F0E6DC] text-[#4A3728] px-1 py-0.5 rounded">1(2) 2(4)</code>.
           </p>
         </div>
 
-        {/* Timing and Questions Settings */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-bold text-[#4A3728] mb-1.5 flex items-center gap-1.5">
@@ -168,9 +164,8 @@ export default function TestSetup({ onStartTest }: TestSetupProps) {
           </div>
         </div>
 
-        {/* Marking Scheme */}
         <div className="bg-[#FAF6F0] p-4 rounded-xl border border-[#E3D6C8]">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-[#6B4E3D] mb-3">Marking Scheme Settings</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#6B4E3D] mb-3">Marking Scheme</h3>
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-semibold text-[#5C483A] mb-1">Correct (+)</label>
