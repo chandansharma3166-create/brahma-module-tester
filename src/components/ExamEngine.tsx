@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Clock, Bookmark, CheckCircle2, ChevronRight, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Clock, Bookmark, ChevronRight, RotateCcw, AlertTriangle } from 'lucide-react';
 import { Question, QuestionStatus, TestSettings, TestResult } from '../lib/types';
 
 interface ExamEngineProps {
@@ -125,6 +125,7 @@ export default function ExamEngine({ questions, settings, onFinishTest }: ExamEn
       id: Date.now().toString(),
       testTitle: settings.title,
       date: new Date().toLocaleDateString('en-GB'),
+      timestamp: Date.now(),
       score,
       maxScore,
       accuracy,
@@ -133,6 +134,8 @@ export default function ExamEngine({ questions, settings, onFinishTest }: ExamEn
       incorrect: incorrectCount,
       unattempted: unattemptedCount,
       timeTakenSeconds: settings.durationMinutes * 60 - secondsRemaining,
+      questionsSnapshot: questions,
+      settingsSnapshot: settings,
     };
 
     onFinishTest(result, userAnswers);
