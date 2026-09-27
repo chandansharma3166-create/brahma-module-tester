@@ -6,7 +6,7 @@ import ExamEngine from '../components/ExamEngine';
 import TestAnalysis from '../components/TestAnalysis';
 import AnalyticsView from '../components/AnalyticsView';
 import { Question, TestSettings, TestResult, BookmarkedQuestion } from '../lib/types';
-import { BarChart3, BookmarkCheck, FileText, Sparkles } from 'lucide-react';
+import { BarChart3, FileText, Trash2, History } from 'lucide-react';
 
 type AppScreen = 'setup' | 'exam' | 'analysis' | 'analytics';
 
@@ -19,7 +19,6 @@ export default function Home() {
   const [history, setHistory] = useState<TestResult[]>([]);
   const [bookmarkCount, setBookmarkCount] = useState<number>(0);
 
-  // Load history and bookmark counts from localStorage
   const refreshStorage = () => {
     try {
       const savedHistory = localStorage.getItem('brahma_test_history');
@@ -93,8 +92,20 @@ export default function Home() {
     }
   };
 
+  const handleDeleteTest = (id: string) => {
+    if (confirm('Delete this test record?')) {
+      const updated = history.filter((h) => h.id !== id);
+      setHistory(updated);
+      try {
+        localStorage.setItem('brahma_test_history', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to remove item', e);
+      }
+    }
+  };
+
   const handleClearHistory = () => {
-    if (confirm('Are you sure you want to clear your saved test history?')) {
+    if (confirm('Are you sure you want to clear your entire test history?')) {
       localStorage.removeItem('brahma_test_history');
       setHistory([]);
     }
@@ -102,7 +113,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* Permanent Top Navigation Bar (Hidden during active CBT exam) */}
       {screen !== 'exam' && (
         <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
           <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -123,7 +133,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Navigation Tabs */}
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -160,11 +169,72 @@ export default function Home() {
         </header>
       )}
 
-      {/* Main Views */}
       <main className="flex-1">
         {screen === 'setup' && (
           <div className="py-8 px-4">
             <TestSetup onStartTest={handleStartTest} />
+
+            {/* Quick Past Tests with Individual Delete */}
+            {history.length > 0 && (
+              <div className="max-w-3xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-md border border-slate-200">
+                <div className="flex items-center justify-between border-b pb-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <History className="w-5 h-5 text-blue-600" />
+                    <h2 className="text-lg font-bold text-slate-800">Recent Test Activity</h2>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setScreen('analytics')}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
+                    >
+                      Deep Analytics →
+                    </button>
+                    <button
+                      onClick={handleClearHistory}
+                      className="flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 font-semibold"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Clear All
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {history.slice(0, 3).map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200"
+                    >
+                      <div>
+                        <h4 className="font-semibold text-slate-800 text-sm">{item.testTitle}</h4>
+                        <p className="text-xs text-slate-500">
+                          {item.date} • {item.totalQuestions} Questions • Accuracy: {item.accuracy}%
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <span className="text-lg font-bold text-blue-600">
+                            {item.score} <span className="text-xs text-slate-400">/ {item.maxScore}</span>
+                          </span>
+                          <p className="text-[11px] text-emerald-600 font-medium">
+                            +{item.correct}, -{item.incorrect}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTest(item.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 rounded-lg transition"
+                          title="Delete this test"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -195,6 +265,7 @@ export default function Home() {
               onBack={() => setScreen('setup')}
               onReattemptFromHistory={handleReattemptFromHistory}
               onClearHistory={handleClearHistory}
+              onDeleteTest={handleDeleteTest}
             />
           </div>
         )}

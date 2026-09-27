@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, Award, Calendar, RotateCcw, 
-  Trash2, BookmarkCheck, ArrowLeft, CheckCircle2, XCircle 
+  Trash2, BookmarkCheck, ArrowLeft 
 } from 'lucide-react';
 import { TestResult, BookmarkedQuestion } from '../lib/types';
 
@@ -12,6 +12,7 @@ interface AnalyticsViewProps {
   onBack: () => void;
   onReattemptFromHistory: (result: TestResult) => void;
   onClearHistory: () => void;
+  onDeleteTest: (id: string) => void;
 }
 
 export default function AnalyticsView({
@@ -19,6 +20,7 @@ export default function AnalyticsView({
   onBack,
   onReattemptFromHistory,
   onClearHistory,
+  onDeleteTest,
 }: AnalyticsViewProps) {
   const [activeTab, setActiveTab] = useState<'analytics' | 'bookmarks'>('analytics');
   const [bookmarks, setBookmarks] = useState<BookmarkedQuestion[]>([]);
@@ -44,7 +46,6 @@ export default function AnalyticsView({
     }
   };
 
-  // Metrics calculation
   const totalTests = history.length;
   const avgAccuracy = totalTests > 0 
     ? Math.round(history.reduce((acc, curr) => acc + curr.accuracy, 0) / totalTests) 
@@ -53,7 +54,6 @@ export default function AnalyticsView({
     ? Math.max(...history.map((h) => h.score)) 
     : 0;
 
-  // Chart data (chronological order)
   const chartData = [...history].reverse();
 
   return (
@@ -129,7 +129,7 @@ export default function AnalyticsView({
                 Score Progression Over Time
               </h3>
               <div className="flex items-end gap-3 h-48 pt-6 border-b border-slate-100 overflow-x-auto">
-                {chartData.map((item, idx) => {
+                {chartData.map((item) => {
                   const percentage = Math.max(0, Math.min(100, Math.round((item.score / (item.maxScore || 1)) * 100)));
                   return (
                     <div key={item.id} className="flex-1 min-w-[48px] flex flex-col items-center gap-2 h-full justify-end group">
@@ -183,19 +183,31 @@ export default function AnalyticsView({
                       </div>
                     </div>
 
-                    <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2">
+                    <div className="flex items-center gap-4 self-end sm:self-center">
                       <span className="text-xl font-extrabold text-blue-600">
                         {item.score} <span className="text-xs text-slate-400 font-normal">/ {item.maxScore}</span>
                       </span>
 
-                      {item.questionsSnapshot && item.questionsSnapshot.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        {item.questionsSnapshot && item.questionsSnapshot.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => onReattemptFromHistory(item)}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" /> Reattempt
+                          </button>
+                        )}
+
                         <button
-                          onClick={() => onReattemptFromHistory(item)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition"
+                          type="button"
+                          onClick={() => onDeleteTest(item.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 rounded-lg transition"
+                          title="Delete this test result"
                         >
-                          <RotateCcw className="w-3.5 h-3.5" /> Reattempt
+                          <Trash2 className="w-4 h-4" />
                         </button>
-                      )}
+                      </div>
                     </div>
                   </div>
                 ))}
